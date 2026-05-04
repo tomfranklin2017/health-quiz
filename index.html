@@ -1,263 +1,559 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>体质自测与订阅推荐 | Body Constitution Quiz</title>
-    <style>
-        :root { --main: #4a7c59; --accent: #f3a683; --bg: #fdfaf6; }
-        body { font-family: 'PingFang SC', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 24px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: var(--main); margin-bottom: 2px; }
-        .header h1 .en { display: block; font-size: 14px; color: #999; font-weight: 400; margin-top: 2px; }
-        .header p .en { display: block; font-size: 12px; color: #bbb; margin-top: 2px; }
-        .progress-bar { height: 8px; background: #eee; border-radius: 4px; margin-bottom: 25px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--main); width: 14%; transition: 0.4s; }
-        .question-card { display: none; }
-        .question-card.active { display: block; animation: slideIn 0.4s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        .question-card h3 .en { display: block; font-size: 13px; color: #999; font-weight: 400; margin-top: 3px; }
-        .option { display: block; width: 100%; padding: 18px; margin: 12px 0; border: 2px solid #f0f0f0; border-radius: 15px; background: white; text-align: left; cursor: pointer; font-size: 16px; transition: 0.3s; box-sizing: border-box; }
-        .option:hover { border-color: var(--main); background: #f4f9f6; }
-        .option .en { display: block; font-size: 12px; color: #aaa; margin-top: 3px; }
-        #result-page { display: none; }
-        .report-card { background: #f4f9f6; padding: 20px; border-radius: 15px; border-left: 6px solid var(--main); margin: 20px 0; }
-        .report-card h3 .en { display: block; font-size: 13px; color: #888; font-weight: 400; margin-top: 4px; }
-        .report-card p .en { display: block; font-size: 13px; color: #aaa; margin-top: 6px; font-style: italic; }
-        .section-title .en { display: block; font-size: 12px; color: #aaa; font-weight: 400; margin-top: 2px; }
-        .sub-label { font-size: 14px; color: #666; }
-        .sub-label .en { display: block; font-size: 12px; color: #bbb; margin-top: 2px; }
-        .meal-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .meal-item { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 10px; text-align: center; }
-        .meal-item img { width: 100%; border-radius: 8px; height: 120px; object-fit: cover; margin-bottom: 8px; }
-        .badge { display: inline-block; padding: 4px 12px; background: var(--accent); color: white; border-radius: 20px; font-size: 12px; margin-bottom: 10px; }
-        .meal-name .en { display: block; font-size: 11px; color: #bbb; margin-top: 2px; }
-        .restart-btn { display: block; width: 100%; padding: 18px; text-align: center; background: var(--main); color: white; border: none; border-radius: 15px; margin-top: 20px; font-size: 16px; cursor: pointer; box-sizing: border-box; }
-        .restart-btn .en { display: block; font-size: 12px; opacity: 0.8; margin-top: 3px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>体质自测 · Sienne 「食·间」</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #3d6b4f;
+  --green-light: #e8f2ec;
+  --green-mid: #6a9e7f;
+  --accent: #e8845a;
+  --accent-light: #fdf0ea;
+  --gold: #c9a84c;
+  --bg: #f9f6f1;
+  --card: #ffffff;
+  --text: #2a2a2a;
+  --muted: #888;
+  --border: #ede9e1;
+  --radius: 20px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* NAV */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(249,246,241,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green); }
+.logo span { font-style: italic; color: var(--accent); }
+.basket-btn {
+  background: var(--green); color: white; border: none;
+  border-radius: 50px; padding: 10px 20px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  transition: background 0.2s, transform 0.15s;
+}
+.basket-btn:hover { background: #2e5239; transform: scale(1.03); }
+.basket-count {
+  background: var(--accent); color: white; border-radius: 50%;
+  width: 20px; height: 20px; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* PAGES */
+.page { display: none; }
+.page.active { display: block; }
+
+/* QUIZ */
+.quiz-wrap { max-width: 580px; margin: 0 auto; padding: 40px 24px 80px; }
+.quiz-header { text-align: center; margin-bottom: 36px; }
+.quiz-header h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--green); line-height: 1.2; }
+.quiz-header h1 em { font-style: italic; color: var(--accent); }
+.quiz-header .sub { margin-top: 8px; font-size: 14px; color: var(--muted); line-height: 1.6; }
+.progress-track { height: 6px; background: var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--green-mid)); width: 0%; transition: width 0.5s cubic-bezier(.4,0,.2,1); border-radius: 10px; }
+.progress-label { font-size: 12px; color: var(--muted); text-align: right; margin-bottom: 28px; }
+.q-card { display: none; animation: fadeUp 0.4s ease-out; }
+.q-card.active { display: block; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.q-card h2 { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 6px; line-height: 1.4; }
+.q-card .q-en { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.opt {
+  display: flex; align-items: flex-start; gap: 14px;
+  width: 100%; padding: 16px 20px; margin-bottom: 12px;
+  border: 2px solid var(--border); border-radius: var(--radius);
+  background: var(--card); cursor: pointer; text-align: left;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.opt:hover { border-color: var(--green); background: var(--green-light); transform: translateX(4px); }
+.opt-dot { width: 20px; height: 20px; min-width: 20px; border: 2px solid var(--border); border-radius: 50%; margin-top: 2px; transition: border-color 0.2s, background 0.2s; }
+.opt:hover .opt-dot { border-color: var(--green); background: var(--green); }
+.opt-text { flex: 1; }
+.opt-zh { font-size: 16px; font-weight: 500; }
+.opt-en { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* RESULTS */
+.result-wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px 100px; }
+.constitution-banner {
+  background: linear-gradient(135deg, var(--green) 0%, #2e5239 100%);
+  border-radius: 24px; padding: 36px 40px; color: white;
+  margin-bottom: 36px; position: relative; overflow: hidden;
+}
+.constitution-banner::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 80% 50%, rgba(255,255,255,0.06) 0%, transparent 60%);
+}
+.cb-inner { position: relative; z-index: 1; }
+.cb-tag {
+  display: inline-block; background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3); border-radius: 50px;
+  padding: 4px 14px; font-size: 12px; letter-spacing: 1px; margin-bottom: 12px;
+}
+.cb-name { font-family: 'Playfair Display', serif; font-size: 36px; line-height: 1.1; margin-bottom: 4px; }
+.cb-name-en { font-size: 16px; opacity: 0.7; margin-bottom: 16px; }
+.cb-desc .zh { display: block; font-size: 14px; opacity: 0.9; line-height: 1.7; margin-bottom: 6px; }
+.cb-desc .en { font-size: 13px; opacity: 0.65; font-style: italic; line-height: 1.6; }
+.cb-icon { position: absolute; right: 36px; top: 50%; transform: translateY(-50%); font-size: 72px; opacity: 0.15; }
+
+/* MENU */
+.menu-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
+.menu-header h2 { font-family: 'Playfair Display', serif; font-size: 24px; }
+.menu-header h2 span { display: block; font-size: 13px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-weight: 400; margin-top: 2px; }
+.menu-note { font-size: 12px; color: var(--muted); }
+.category-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.tab { padding: 6px 16px; border-radius: 50px; border: 1.5px solid var(--border); background: white; font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+.tab.active { background: var(--green); color: white; border-color: var(--green); }
+.tab:hover:not(.active) { border-color: var(--green); color: var(--green); }
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-bottom: 40px; }
+.food-card { background: var(--card); border-radius: var(--radius); border: 2px solid var(--border); overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
+.food-card:hover { border-color: var(--green); box-shadow: var(--shadow); transform: translateY(-3px); }
+.food-card.in-basket { border-color: var(--green); background: var(--green-light); }
+.food-img { width: 100%; height: 150px; object-fit: cover; display: block; }
+.food-img-ph { width: 100%; height: 150px; background: linear-gradient(135deg, var(--green-light), var(--border)); display: none; align-items: center; justify-content: center; font-size: 40px; }
+.food-body { padding: 14px; }
+.food-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.food-badge { padding: 2px 10px; border-radius: 50px; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; }
+.badge-weekly { background: var(--accent-light); color: var(--accent); }
+.badge-monthly { background: var(--green-light); color: var(--green); }
+.badge-premium { background: #fdf8e8; color: var(--gold); }
+.food-name-zh { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+.food-name-en { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.food-benefit { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+.food-footer { display: flex; align-items: center; justify-content: space-between; }
+.food-price { font-size: 18px; font-weight: 700; color: var(--green); }
+.food-price span { font-size: 11px; color: var(--muted); font-weight: 400; }
+.add-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--green); color: white; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; line-height: 1; }
+.add-btn:hover { background: #2e5239; transform: scale(1.1); }
+.qty-control { display: flex; align-items: center; gap: 8px; }
+.qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--border); background: white; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+.qty-btn:hover { border-color: var(--green); color: var(--green); }
+.qty-num { font-size: 15px; font-weight: 600; min-width: 20px; text-align: center; }
+
+/* BASKET */
+.basket-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+.basket-overlay.open { display: block; }
+.basket-panel {
+  position: fixed; right: 0; top: 0; bottom: 0;
+  width: min(420px, 100vw); background: var(--bg); z-index: 201;
+  display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+  box-shadow: -8px 0 40px rgba(0,0,0,0.15);
+}
+.basket-panel.open { transform: translateX(0); }
+.basket-header { padding: 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.basket-header h3 { font-family: 'Playfair Display', serif; font-size: 22px; }
+.basket-header h3 span { display: block; font-size: 12px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-weight: 400; }
+.close-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--border); background: white; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.close-btn:hover { background: var(--border); }
+.basket-constitution { padding: 12px 24px 0; }
+.constitution-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--green-light); color: var(--green); border-radius: 50px; padding: 6px 14px; font-size: 12px; font-weight: 500; }
+.basket-items { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.basket-empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 14px; }
+.basket-empty .icon { font-size: 48px; margin-bottom: 12px; }
+.basket-item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); animation: fadeUp 0.3s ease; }
+.basket-item-img { width: 56px; height: 56px; border-radius: 12px; background: var(--green-light); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden; }
+.basket-item-img img { width: 100%; height: 100%; object-fit: cover; }
+.basket-item-info { flex: 1; }
+.basket-item-name { font-size: 14px; font-weight: 600; }
+.basket-item-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.basket-item-price { font-size: 15px; font-weight: 700; color: var(--green); margin-top: 4px; }
+.basket-item-remove { color: var(--muted); background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px; transition: color 0.15s; }
+.basket-item-remove:hover { color: #e05252; }
+.basket-footer { padding: 20px 24px; border-top: 1px solid var(--border); background: white; }
+.basket-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.basket-row.total { font-size: 18px; font-weight: 700; color: var(--text); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.basket-row.total span:last-child { color: var(--green); }
+.checkout-btn { width: 100%; padding: 16px; background: var(--green); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.15s; margin-top: 14px; }
+.checkout-btn:hover { background: #2e5239; transform: scale(1.02); }
+.checkout-btn:disabled { background: #bbb; cursor: not-allowed; transform: none; }
+
+/* CHECKOUT */
+.checkout-wrap { max-width: 580px; margin: 0 auto; padding: 40px 24px 80px; text-align: center; }
+.checkout-success { animation: fadeUp 0.6s ease; }
+.success-icon { font-size: 64px; margin-bottom: 20px; }
+.checkout-wrap h2 { font-family: 'Playfair Display', serif; font-size: 28px; margin-bottom: 8px; color: var(--green); }
+.checkout-wrap p { color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 24px; }
+.order-summary-card { background: white; border-radius: var(--radius); border: 1.5px solid var(--border); padding: 24px; text-align: left; margin-bottom: 24px; }
+.order-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.order-item:last-child { border-bottom: none; }
+.order-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--border); color: var(--green); }
+.retake-btn { display: inline-block; padding: 14px 32px; background: transparent; border: 2px solid var(--green); border-radius: 50px; color: var(--green); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+.retake-btn:hover { background: var(--green); color: white; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #2a2a2a; color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 300; transition: transform 0.3s cubic-bezier(.4,0,.2,1); white-space: nowrap; pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 600px) {
+  .menu-grid { grid-template-columns: 1fr 1fr; }
+  .cb-icon { display: none; }
+  .constitution-banner { padding: 24px; }
+  .cb-name { font-size: 26px; }
+}
+@media (max-width: 400px) { .menu-grid { grid-template-columns: 1fr; } }
+</style>
 </head>
 <body>
 
-<div class="container">
-    <div id="quiz-ui">
-        <div class="header">
-            <h1>健康体质自测 <span class="en">Health Body Constitution Quiz</span></h1>
-            <p>完成7道题，获取你的专属月度餐单 <span class="en">Answer 7 questions to get your personalised monthly meal plan</span></p>
-        </div>
-        <div class="progress-bar"><div class="progress-fill" id="p-fill"></div></div>
-        
-        <div id="questions-container"></div>
-    </div>
-
-    <div id="result-page">
-        <div class="header">
-            <h1>测评报告 <span class="en">Assessment Report</span></h1>
-        </div>
-        <div class="report-card">
-            <h3>您的体质倾向：<span id="type-tag" style="color:var(--main)">计算中... <span class="en" style="font-size:12px;">Calculating...</span></span>
-                <span class="en">Your constitution type:</span>
-            </h3>
-            <p id="type-desc"></p>
-        </div>
-
-        <h3 class="section-title">📅 订阅推荐 (月度计划) <span class="en">Subscription Recommendations (Monthly Plan)</span></h3>
-        <p class="sub-label">根据您的体质，我们为您锁定了以下周/月度餐食：
-            <span class="en">Based on your constitution, we have selected the following weekly/monthly meals for you:</span>
-        </p>
-        <div class="meal-section" id="meal-display"></div>
-        
-        <button class="restart-btn" onclick="location.reload()">重新测评 <span class="en">Retake the Quiz</span></button>
-    </div>
+<div class="topbar">
+  <div class="logo">Sienne <span>「食·间」</span></div>
+  <button class="basket-btn" onclick="toggleBasket()">
+    🛒 Basket <div class="basket-count" id="basket-count">0</div>
+  </button>
 </div>
 
+<!-- QUIZ PAGE -->
+<div class="page active" id="page-quiz">
+  <div class="quiz-wrap">
+    <div class="quiz-header">
+      <h1>健康体质自测<br><em>Know Your Constitution</em></h1>
+      <p class="sub">完成7道题，获取您的专属体质膳食方案<br>Answer 7 questions to unlock your personalised meal plan</p>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="p-fill"></div></div>
+    <div class="progress-label" id="p-label">Question 1 of 7</div>
+    <div id="questions-container"></div>
+  </div>
+</div>
+
+<!-- RESULTS + MENU PAGE -->
+<div class="page" id="page-results">
+  <div class="result-wrap">
+    <div class="constitution-banner" id="const-banner">
+      <div class="cb-inner">
+        <div class="cb-tag">YOUR CONSTITUTION · 您的体质</div>
+        <div class="cb-name" id="cb-name">—</div>
+        <div class="cb-name-en" id="cb-name-en">—</div>
+        <div class="cb-desc" id="cb-desc"></div>
+      </div>
+      <div class="cb-icon" id="cb-icon">🌿</div>
+    </div>
+    <div class="menu-header">
+      <h2>Your Meal Plan <span>根据您的体质推荐 · Tap + to add to basket</span></h2>
+    </div>
+    <div class="category-tabs" id="cat-tabs"></div>
+    <div class="menu-grid" id="menu-grid"></div>
+  </div>
+</div>
+
+<!-- CHECKOUT DONE PAGE -->
+<div class="page" id="page-checkout">
+  <div class="checkout-wrap">
+    <div class="checkout-success">
+      <div class="success-icon">🎉</div>
+      <h2>Order Placed! · 订单成功</h2>
+      <p>Your personalised meal plan has been confirmed.<br>您的专属膳食订单已确认，我们将为您精心备餐。</p>
+      <div class="order-summary-card" id="order-summary"></div>
+      <button class="retake-btn" onclick="restartAll()">重新测评 · Retake Quiz</button>
+    </div>
+  </div>
+</div>
+
+<!-- BASKET -->
+<div class="basket-overlay" id="basket-overlay" onclick="toggleBasket()"></div>
+<div class="basket-panel" id="basket-panel">
+  <div class="basket-header">
+    <h3>Your Basket <span>您的订单篮</span></h3>
+    <button class="close-btn" onclick="toggleBasket()">✕</button>
+  </div>
+  <div class="basket-constitution" id="basket-constitution"></div>
+  <div class="basket-items" id="basket-items">
+    <div class="basket-empty"><div class="icon">🛒</div><div>Your basket is empty<br>添加您喜爱的餐食开始吧</div></div>
+  </div>
+  <div class="basket-footer">
+    <div id="basket-summary"></div>
+    <button class="checkout-btn" id="checkout-btn" onclick="doCheckout()" disabled>Proceed to Checkout · 确认订单</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-    const questions = [
-        {
-            q: "1. 您的精神状态经常是？",
-            qEn: "1. How would you describe your usual energy levels?",
-            options: [
-                {t:"精力充沛", tEn:"Energetic and full of vitality", v:"normal"},
-                {t:"容易疲劳、气短", tEn:"Easily fatigued or short of breath", v:"weak"},
-                {t:"心情抑郁、易怒", tEn:"Moody, depressed or easily irritated", v:"stagnant"}
-            ]
-        },
-        {
-            q: "2. 您的抗寒能力如何？",
-            qEn: "2. How sensitive are you to cold temperatures?",
-            options: [
-                {t:"非常怕冷，夏天也喝热水", tEn:"Very sensitive to cold — drink hot water even in summer", v:"cold"},
-                {t:"非常怕热，容易出汗", tEn:"Very sensitive to heat and sweat easily", v:"hot"},
-                {t:"适中", tEn:"Neither — comfortable in most temperatures", v:"normal"}
-            ]
-        },
-        {
-            q: "3. 观察皮肤和面色？",
-            qEn: "3. How would you describe your skin and complexion?",
-            options: [
-                {t:"面色晦暗，容易有斑", tEn:"Dull complexion, prone to dark spots or patches", v:"stagnant"},
-                {t:"皮肤油腻，容易长痘", tEn:"Oily skin, prone to acne or breakouts", v:"damp"},
-                {t:"皮肤干燥，容易脱屑", tEn:"Dry skin, prone to flaking or peeling", v:"dry"}
-            ]
-        },
-        {
-            q: "4. 您的消化情况如何？",
-            qEn: "4. How is your digestion?",
-            options: [
-                {t:"胃口好，容易饿", tEn:"Good appetite, get hungry easily", v:"hot"},
-                {t:"饭后容易腹胀", tEn:"Bloating or discomfort after meals", v:"weak"},
-                {t:"吃凉的容易拉肚子", tEn:"Cold food often causes loose stools or diarrhoea", v:"cold"}
-            ]
-        },
-        {
-            q: "5. 您的睡眠质量？",
-            qEn: "5. How is your sleep quality?",
-            options: [
-                {t:"入睡快，质量高", tEn:"Fall asleep quickly and sleep well", v:"normal"},
-                {t:"多梦易醒", tEn:"Vivid dreams or wake up frequently during the night", v:"weak"},
-                {t:"失眠，心情烦躁", tEn:"Insomnia or restlessness at night", v:"hot"}
-            ]
-        },
-        {
-            q: "6. 身体是否有沉重感？",
-            qEn: "6. Do you feel a sense of heaviness in your body?",
-            options: [
-                {t:"感觉身体很重，不想动", tEn:"Body feels heavy and sluggish, reluctant to move", v:"damp"},
-                {t:"轻松有力", tEn:"Feel light and strong", v:"normal"},
-                {t:"四肢无力，但体重不重", tEn:"Limbs feel weak, but body is not heavy", v:"weak"}
-            ]
-        },
-        {
-            q: "7. 您的饮水习惯？",
-            qEn: "7. What are your thirst and drinking habits like?",
-            options: [
-                {t:"很少口渴", tEn:"Rarely feel thirsty", v:"cold"},
-                {t:"一直想喝水，口干", tEn:"Constantly thirsty with a dry mouth", v:"hot"},
-                {t:"口粘，不想喝水", tEn:"Mouth feels sticky or coated, no desire to drink", v:"damp"}
-            ]
-        }
-    ];
+const QUESTIONS = [
+  { q:"1. 您的精神状态经常是？", qEn:"How would you describe your usual energy levels?",
+    opts:[{zh:"精力充沛",en:"Energetic and full of vitality",v:"normal"},{zh:"容易疲劳、气短",en:"Easily fatigued or short of breath",v:"weak"},{zh:"心情抑郁、易怒",en:"Moody, depressed or easily irritated",v:"stagnant"}]},
+  { q:"2. 您的抗寒能力如何？", qEn:"How sensitive are you to cold temperatures?",
+    opts:[{zh:"非常怕冷，夏天也喝热水",en:"Very sensitive to cold — hot drinks even in summer",v:"cold"},{zh:"非常怕热，容易出汗",en:"Very sensitive to heat, sweat easily",v:"hot"},{zh:"适中",en:"Neither — comfortable in most temperatures",v:"normal"}]},
+  { q:"3. 观察皮肤和面色？", qEn:"How would you describe your skin and complexion?",
+    opts:[{zh:"面色晦暗，容易有斑",en:"Dull complexion, prone to dark spots",v:"stagnant"},{zh:"皮肤油腻，容易长痘",en:"Oily skin, prone to acne",v:"damp"},{zh:"皮肤干燥，容易脱屑",en:"Dry skin, prone to flaking",v:"dry"}]},
+  { q:"4. 您的消化情况如何？", qEn:"How is your digestion?",
+    opts:[{zh:"胃口好，容易饿",en:"Good appetite, get hungry easily",v:"hot"},{zh:"饭后容易腹胀",en:"Bloating or discomfort after meals",v:"weak"},{zh:"吃凉的容易拉肚子",en:"Cold food often causes loose stools",v:"cold"}]},
+  { q:"5. 您的睡眠质量？", qEn:"How is your sleep quality?",
+    opts:[{zh:"入睡快，质量高",en:"Fall asleep quickly and sleep well",v:"normal"},{zh:"多梦易醒",en:"Vivid dreams or frequent waking",v:"weak"},{zh:"失眠，心情烦躁",en:"Insomnia or restlessness at night",v:"hot"}]},
+  { q:"6. 身体是否有沉重感？", qEn:"Do you feel a sense of heaviness in your body?",
+    opts:[{zh:"感觉身体很重，不想动",en:"Body feels heavy and sluggish",v:"damp"},{zh:"轻松有力",en:"Feel light and strong",v:"normal"},{zh:"四肢无力，但体重不重",en:"Weak limbs but body isn't heavy",v:"weak"}]},
+  { q:"7. 您的饮水习惯？", qEn:"What are your thirst and drinking habits like?",
+    opts:[{zh:"很少口渴",en:"Rarely feel thirsty",v:"cold"},{zh:"一直想喝水，口干",en:"Constantly thirsty with a dry mouth",v:"hot"},{zh:"口粘，不想喝水",en:"Mouth feels sticky, no desire to drink",v:"damp"}]}
+];
 
-    let currentQ = 0;
-    let scores = {};
+const CONSTITUTIONS = {
+  cold:     { name:"虚寒体质", nameEn:"Cold-Deficiency Constitution", icon:"🫖", desc:{zh:"建议温补，避免生冷。您的月度方案侧重于暖胃固本、温经散寒。",en:"Warming and nourishing foods recommended. Avoid cold or raw foods. Plan focuses on warming the stomach, strengthening your foundation, and dispersing cold."} },
+  hot:      { name:"燥热体质", nameEn:"Heat-Excess Constitution",      icon:"🌊", desc:{zh:"建议清补，多食滋阴降火之物。月度方案侧重于清热排毒、生津润燥。",en:"Cooling and yin-nourishing foods recommended. Plan focuses on clearing heat, detoxifying, and generating fluids to moisten dryness."} },
+  normal:   { name:"平和体质", nameEn:"Balanced Constitution",          icon:"⚖️", desc:{zh:"非常健康的体质！月度方案侧重于四季平衡膳食，维持良好状态。",en:"You have a wonderfully balanced constitution. Plan focuses on a well-rounded seasonal diet to maintain optimal health."} },
+  weak:     { name:"气虚体质", nameEn:"Qi-Deficiency Constitution",     icon:"🌱", desc:{zh:"建议补气养血，避免过劳。月度方案侧重于益气健脾、补中益气。",en:"Foods that replenish qi and nourish blood are recommended. Avoid overexertion. Plan focuses on boosting energy and supporting the spleen."} },
+  damp:     { name:"痰湿体质", nameEn:"Damp-Phlegm Constitution",       icon:"🌾", desc:{zh:"建议祛湿化痰，饮食宜清淡。月度方案侧重于健脾利湿、化痰消浊。",en:"Light foods that eliminate dampness recommended. Plan focuses on strengthening the spleen, draining dampness, and resolving phlegm."} },
+  stagnant: { name:"气郁体质", nameEn:"Qi-Stagnation Constitution",     icon:"🌸", desc:{zh:"建议疏肝理气，保持心情舒畅。月度方案侧重于行气活血、疏肝解郁。",en:"Foods that soothe the liver and regulate qi recommended. Plan focuses on promoting qi flow, activating blood, and relieving stagnation."} },
+  dry:      { name:"阴虚体质", nameEn:"Yin-Deficiency Constitution",    icon:"💧", desc:{zh:"建议滋阴润燥，少食辛辣。月度方案侧重于养阴生津、润肺益肾。",en:"Moistening and yin-nourishing foods recommended. Avoid spicy foods. Plan focuses on nourishing yin and generating fluids."} }
+};
 
-    function initQuiz() {
-        const container = document.getElementById('questions-container');
-        questions.forEach((item, index) => {
-            let html = `<div class="question-card ${index===0?'active':''}" id="qc${index}">
-                <h3>${item.q} <span class="en">${item.qEn}</span></h3>`;
-            item.options.forEach(opt => {
-                html += `<button class="option" onclick="handleSelect('${opt.v}')">
-                    ${opt.t}
-                    <span class="en">${opt.tEn}</span>
-                </button>`;
-            });
-            html += `</div>`;
-            container.innerHTML += html;
-        });
-    }
+const MENU = {
+  cold: [
+    {id:"c1",zh:"红枣枸杞鸡汤",en:"Red Date & Wolfberry Chicken Soup",bZh:"温中补虚·养血安神",bEn:"Warms middle burner, nourishes blood & calms the spirit",price:28,cat:"Soups 汤品",badge:"weekly",img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+    {id:"c2",zh:"黑豆炖羊肉",en:"Black Bean Braised Lamb",bZh:"温肾散寒·补精益髓",bEn:"Warms the kidneys, dispels cold, replenishes essence",price:38,cat:"Mains 主食",badge:"monthly",img:"https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400"},
+    {id:"c3",zh:"生姜红糖燕麦粥",en:"Ginger & Brown Sugar Oat Congee",bZh:"温胃散寒·发汗解表",bEn:"Warms the stomach, disperses cold and promotes circulation",price:16,cat:"Breakfast 早餐",badge:"weekly",img:"https://images.unsplash.com/photo-1504308805006-0f7a5f1f0f29?w=400"},
+    {id:"c4",zh:"当归桂圆红枣茶",en:"Angelica, Longan & Red Date Tea",bZh:"补血活血·温经通脉",bEn:"Nourishes and activates blood, warms meridians",price:12,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400"},
+    {id:"c5",zh:"核桃黑芝麻糊",en:"Walnut & Black Sesame Paste",bZh:"补肾温阳·润肠通便",bEn:"Tonifies kidney yang energy, lubricates the intestines",price:18,cat:"Breakfast 早餐",badge:"monthly",img:"https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=400"},
+    {id:"c6",zh:"桂皮炖苹果",en:"Cinnamon Braised Apple",bZh:"温中散寒·助消化",bEn:"Warms the middle, disperses cold and aids digestion",price:14,cat:"Desserts 甜点",badge:"weekly",img:"https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400"},
+    {id:"c7",zh:"韭菜炒鸡蛋",en:"Chinese Chive & Egg Stir-fry",bZh:"温肾助阳·行气散瘀",bEn:"Warms kidney yang and promotes qi circulation",price:20,cat:"Mains 主食",badge:"weekly",img:"https://images.unsplash.com/photo-1627308595229-7830a5c18106?w=400"},
+    {id:"c8",zh:"糯米红枣糕",en:"Glutinous Rice & Red Date Cake",bZh:"补脾养胃·益气生津",bEn:"Tonifies spleen, nourishes stomach and replenishes qi",price:15,cat:"Desserts 甜点",badge:"monthly",img:"https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400"}
+  ],
+  hot: [
+    {id:"h1",zh:"冬瓜薏米排骨汤",en:"Winter Melon & Barley Pork Rib Soup",bZh:"清热利湿·消暑生津",bEn:"Clears heat and dampness, relieves summer heat",price:30,cat:"Soups 汤品",badge:"weekly",img:"https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"},
+    {id:"h2",zh:"荷叶蒸鸡",en:"Lotus Leaf Steamed Chicken",bZh:"清暑化湿·升发清阳",bEn:"Clears summer heat, resolves dampness and lifts yang energy",price:36,cat:"Mains 主食",badge:"weekly",img:"https://images.unsplash.com/photo-1512058560366-cd242d4536ee?w=400"},
+    {id:"h3",zh:"绿豆百合银耳汤",en:"Mung Bean, Lily & Snow Fungus Soup",bZh:"清热解毒·滋阴润肺",bEn:"Clears heat toxins and nourishes yin to moisten the lungs",price:18,cat:"Desserts 甜点",badge:"weekly",img:"https://images.unsplash.com/photo-1606756790138-261d2b21cd75?w=400"},
+    {id:"h4",zh:"菊花决明子茶",en:"Chrysanthemum & Cassia Seed Tea",bZh:"清肝明目·降火平肝",bEn:"Clears liver heat, improves vision and subdues liver yang",price:10,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400"},
+    {id:"h5",zh:"苦瓜炒牛肉",en:"Bitter Melon & Beef Stir-fry",bZh:"清热明目·解毒降火",bEn:"Clears heat, improves eyesight and has anti-inflammatory effects",price:28,cat:"Mains 主食",badge:"monthly",img:"https://images.unsplash.com/photo-1574484284002-952d92456975?w=400"},
+    {id:"h6",zh:"薄荷柠檬水",en:"Mint & Lemon Infused Water",bZh:"清热解暑·提神醒脑",bEn:"Relieves heat, refreshes the mind and promotes alertness",price:8,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400"},
+    {id:"h7",zh:"芦荟蜂蜜燕麦",en:"Aloe Vera & Honey Oats",bZh:"清热润燥·通便排毒",bEn:"Clears heat, moistens dryness and supports healthy bowels",price:16,cat:"Breakfast 早餐",badge:"weekly",img:"https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400"},
+    {id:"h8",zh:"莲子心银耳羹",en:"Lotus Seed Heart & Snow Fungus Dessert",bZh:"清心降火·安神助眠",bEn:"Clears heart fire, calms the spirit and promotes restful sleep",price:22,cat:"Desserts 甜点",badge:"premium",img:"https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400"}
+  ],
+  normal: [
+    {id:"n1",zh:"五谷杂粮饭套餐",en:"Five-Grain Mixed Rice Set",bZh:"调和五脏·补中益气",bEn:"Harmonises the five organs and replenishes central qi",price:22,cat:"Mains 主食",badge:"weekly",img:"https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"},
+    {id:"n2",zh:"时令蔬菜沙拉",en:"Seasonal Vegetable Salad",bZh:"清淡养胃·补充维生素",bEn:"Light on the stomach and rich in vitamins and antioxidants",price:18,cat:"Mains 主食",badge:"weekly",img:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400"},
+    {id:"n3",zh:"燕麦水果早餐碗",en:"Oat & Fresh Fruit Breakfast Bowl",bZh:"平衡营养·精力充沛",bEn:"Balanced nutrition to keep you energised through the day",price:16,cat:"Breakfast 早餐",badge:"weekly",img:"https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400"},
+    {id:"n4",zh:"山药薏米粥",en:"Yam & Barley Congee",bZh:"健脾益胃·补肺固肾",bEn:"Strengthens spleen and stomach, tonifies lungs and kidneys",price:14,cat:"Breakfast 早餐",badge:"monthly",img:"https://images.unsplash.com/photo-1504308805006-0f7a5f1f0f29?w=400"},
+    {id:"n5",zh:"清蒸鲈鱼",en:"Steamed Sea Bass",bZh:"健脾益胃·补肝肾",bEn:"Strengthens spleen, benefits liver and kidney function",price:42,cat:"Mains 主食",badge:"premium",img:"https://images.unsplash.com/photo-1510130387422-82bed34b37e9?w=400"},
+    {id:"n6",zh:"枸杞菊花茶",en:"Wolfberry & Chrysanthemum Tea",bZh:"明目养肝·抗氧化",bEn:"Improves vision, nourishes the liver and has antioxidant properties",price:10,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400"},
+    {id:"n7",zh:"蒸蛋羹",en:"Silky Steamed Egg Custard",bZh:"养心安神·补充蛋白",bEn:"Nourishes the heart, calms the mind and provides quality protein",price:12,cat:"Mains 主食",badge:"weekly",img:"https://images.unsplash.com/photo-1627308595229-7830a5c18106?w=400"},
+    {id:"n8",zh:"南瓜浓汤",en:"Pumpkin Velouté",bZh:"补中益气·护眼明目",bEn:"Replenishes central qi and promotes eye health with beta-carotene",price:24,cat:"Soups 汤品",badge:"monthly",img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"}
+  ],
+  weak: [
+    {id:"w1",zh:"黄芪党参乌鸡汤",en:"Astragalus & Codonopsis Black Chicken Soup",bZh:"大补元气·益气固表",bEn:"Strongly tonifies yuan qi, boosts wei qi and immunity",price:42,cat:"Soups 汤品",badge:"premium",img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+    {id:"w2",zh:"山药莲子红豆粥",en:"Yam, Lotus Seed & Red Bean Congee",bZh:"健脾益气·固肾涩精",bEn:"Strengthens spleen qi and stabilises kidney essence",price:16,cat:"Breakfast 早餐",badge:"weekly",img:"https://images.unsplash.com/photo-1504308805006-0f7a5f1f0f29?w=400"},
+    {id:"w3",zh:"红枣桂圆蒸饭",en:"Red Date & Longan Steamed Rice",bZh:"补气养血·健脾和胃",bEn:"Replenishes qi, nourishes blood and harmonises the spleen",price:20,cat:"Mains 主食",badge:"weekly",img:"https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"},
+    {id:"w4",zh:"太子参蜂蜜茶",en:"Prince Ginseng & Honey Tea",bZh:"益气生津·润肺止咳",bEn:"Gently replenishes qi, generates fluids and moistens the lungs",price:12,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400"},
+    {id:"w5",zh:"鲫鱼豆腐汤",en:"Crucian Carp & Tofu Soup",bZh:"健脾利湿·补虚通乳",bEn:"Strengthens spleen, resolves dampness and gently nourishes deficiency",price:28,cat:"Soups 汤品",badge:"weekly",img:"https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"},
+    {id:"w6",zh:"芝麻花生糊",en:"Sesame & Peanut Paste",bZh:"补益肝肾·润燥滑肠",bEn:"Nourishes liver and kidneys, lubricates the intestines",price:14,cat:"Breakfast 早餐",badge:"monthly",img:"https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=400"},
+    {id:"w7",zh:"牛肉炖胡萝卜",en:"Beef & Carrot Stew",bZh:"补中益气·滋养肌肉",bEn:"Replenishes central qi and nourishes muscle tissue",price:36,cat:"Mains 主食",badge:"monthly",img:"https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400"},
+    {id:"w8",zh:"桂圆红枣银耳羹",en:"Longan, Red Date & Snow Fungus Dessert",bZh:"养心补血·安神润肤",bEn:"Nourishes the heart, replenishes blood and calms the spirit",price:18,cat:"Desserts 甜点",badge:"weekly",img:"https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400"}
+  ],
+  damp: [
+    {id:"d1",zh:"薏米红豆祛湿汤",en:"Barley & Red Bean Dampness-Clearing Soup",bZh:"健脾祛湿·消肿利水",bEn:"Strengthens spleen, eliminates dampness and reduces water retention",price:18,cat:"Soups 汤品",badge:"weekly",img:"https://images.unsplash.com/photo-1606756790138-261d2b21cd75?w=400"},
+    {id:"d2",zh:"荷叶冬瓜茶",en:"Lotus Leaf & Winter Melon Tea",bZh:"祛湿降脂·清热消暑",bEn:"Eliminates dampness, reduces lipids and clears heat",price:10,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400"},
+    {id:"d3",zh:"白萝卜炖牛腩",en:"White Radish & Beef Brisket Braise",bZh:"化痰消积·顺气宽中",bEn:"Resolves phlegm, disperses stagnation and promotes qi flow",price:38,cat:"Mains 主食",badge:"monthly",img:"https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400"},
+    {id:"d4",zh:"陈皮姜茶",en:"Aged Tangerine Peel & Ginger Tea",bZh:"理气化痰·温中燥湿",bEn:"Regulates qi, resolves phlegm and dries dampness in the middle",price:10,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400"},
+    {id:"d5",zh:"燕麦南瓜早餐粥",en:"Oat & Pumpkin Morning Congee",bZh:"健脾益胃·补中化湿",bEn:"Strengthens spleen and stomach, replenishes centre and transforms dampness",price:14,cat:"Breakfast 早餐",badge:"weekly",img:"https://images.unsplash.com/photo-1504308805006-0f7a5f1f0f29?w=400"},
+    {id:"d6",zh:"清炒苦瓜木耳",en:"Sautéed Bitter Melon & Black Wood Ear",bZh:"清热燥湿·活血化瘀",bEn:"Clears heat, dries dampness and promotes healthy blood circulation",price:20,cat:"Mains 主食",badge:"weekly",img:"https://images.unsplash.com/photo-1574484284002-952d92456975?w=400"},
+    {id:"d7",zh:"茯苓山药蒸糕",en:"Poria & Yam Steamed Cake",bZh:"健脾渗湿·宁心安神",bEn:"Strengthens spleen, drains dampness and calms the mind",price:16,cat:"Desserts 甜点",badge:"monthly",img:"https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400"},
+    {id:"d8",zh:"冬瓜虾仁汤",en:"Winter Melon & Prawn Soup",bZh:"利尿消肿·清热化湿",bEn:"Promotes urination, reduces oedema and clears heat-dampness",price:26,cat:"Soups 汤品",badge:"weekly",img:"https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"}
+  ],
+  stagnant: [
+    {id:"s1",zh:"玫瑰花陈皮茶",en:"Rose & Aged Tangerine Peel Tea",bZh:"疏肝解郁·理气活血",bEn:"Soothes the liver, resolves stagnation and activates blood",price:12,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400"},
+    {id:"s2",zh:"佛手香橼炖猪肝",en:"Buddha's Hand & Pig Liver Braise",bZh:"疏肝理气·补血明目",bEn:"Soothes the liver, regulates qi and nourishes blood",price:34,cat:"Mains 主食",badge:"monthly",img:"https://images.unsplash.com/photo-1512058560366-cd242d4536ee?w=400"},
+    {id:"s3",zh:"橙皮柠檬蜂蜜水",en:"Orange Peel, Lemon & Honey Water",bZh:"行气解郁·生津止渴",bEn:"Moves qi, relieves stagnation and generates fluids",price:8,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400"},
+    {id:"s4",zh:"合欢花小米粥",en:"Silk Tree Flower & Millet Congee",bZh:"解郁安神·活血消肿",bEn:"Relieves depression, calms the spirit and promotes circulation",price:16,cat:"Breakfast 早餐",badge:"weekly",img:"https://images.unsplash.com/photo-1504308805006-0f7a5f1f0f29?w=400"},
+    {id:"s5",zh:"番茄牛腩煲",en:"Tomato & Beef Brisket Hot Pot",bZh:"行气活血·开胃消食",bEn:"Promotes qi and blood flow, stimulates appetite and digestion",price:40,cat:"Mains 主食",badge:"weekly",img:"https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400"},
+    {id:"s6",zh:"百合莲子银耳羹",en:"Lily Bulb, Lotus Seed & Snow Fungus Dessert",bZh:"宁心安神·润肺止咳",bEn:"Calms the heart, quiets the spirit and moistens the lungs",price:20,cat:"Desserts 甜点",badge:"weekly",img:"https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400"},
+    {id:"s7",zh:"柴胡枸杞炖鸡",en:"Bupleurum & Wolfberry Stewed Chicken",bZh:"疏肝解郁·补虚扶正",bEn:"Strongly soothes the liver, resolves stagnation and tonifies deficiency",price:44,cat:"Soups 汤品",badge:"premium",img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+    {id:"s8",zh:"薄荷绿茶",en:"Fresh Mint Green Tea",bZh:"疏肝清热·提神醒脑",bEn:"Soothes the liver, clears heat and refreshes the mind",price:8,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400"}
+  ],
+  dry: [
+    {id:"dr1",zh:"银耳雪梨羹",en:"Snow Fungus & Asian Pear Dessert Soup",bZh:"滋阴润燥·养肺生津",bEn:"Nourishes yin, moistens dryness and generates lung fluids",price:18,cat:"Desserts 甜点",badge:"weekly",img:"https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400"},
+    {id:"dr2",zh:"石斛麦冬炖老鸭",en:"Dendrobium & Ophiopogon Duck Soup",bZh:"滋阴清热·养胃生津",bEn:"Nourishes yin, clears heat and generates stomach fluids",price:52,cat:"Soups 汤品",badge:"premium",img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+    {id:"dr3",zh:"黑芝麻燕麦粥",en:"Black Sesame & Oat Congee",bZh:"滋补肝肾·润肠通便",bEn:"Nourishes liver and kidneys and lubricates the intestines",price:14,cat:"Breakfast 早餐",badge:"weekly",img:"https://images.unsplash.com/photo-1504308805006-0f7a5f1f0f29?w=400"},
+    {id:"dr4",zh:"枸杞桑葚饮",en:"Wolfberry & Mulberry Drink",bZh:"补益肝肾·明目黑发",bEn:"Tonifies liver and kidneys, improves vision and darkens hair",price:12,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400"},
+    {id:"dr5",zh:"蜂蜜蒸南瓜",en:"Honey Steamed Pumpkin",bZh:"润肺益气·解毒止痛",bEn:"Moistens the lungs, replenishes qi and soothes inflammation",price:16,cat:"Desserts 甜点",badge:"weekly",img:"https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400"},
+    {id:"dr6",zh:"虫草花炖瘦肉",en:"Caterpillar Fungus Flower & Pork Soup",bZh:"补肺益肾·滋阴润燥",bEn:"Tonifies lungs and kidneys, nourishes yin and moistens dryness",price:46,cat:"Soups 汤品",badge:"premium",img:"https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"},
+    {id:"dr7",zh:"蒸豆腐虾滑",en:"Steamed Tofu with Shrimp Paste",bZh:"滋阴补肾·益气和中",bEn:"Nourishes yin and kidneys, replenishes qi and harmonises the centre",price:28,cat:"Mains 主食",badge:"weekly",img:"https://images.unsplash.com/photo-1510130387422-82bed34b37e9?w=400"},
+    {id:"dr8",zh:"玉竹沙参茶",en:"Polygonatum & Adenophora Tea",bZh:"养阴润燥·生津止渴",bEn:"Nourishes yin, moistens dryness and generates thirst-quenching fluids",price:10,cat:"Teas & Drinks 茶饮",badge:"weekly",img:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400"}
+  ]
+};
 
-    function handleSelect(val) {
-        scores[val] = (scores[val] || 0) + 1;
-        document.getElementById(`qc${currentQ}`).classList.remove('active');
-        currentQ++;
-        if(currentQ < questions.length) {
-            document.getElementById(`qc${currentQ}`).classList.add('active');
-            document.getElementById('p-fill').style.width = ((currentQ+1)/7 * 100) + '%';
-        } else {
-            showReport();
-        }
-    }
+// STATE
+let currentQ=0, scores={}, topType=null, basket={}, activeCat='All';
 
-    function showReport() {
-        document.getElementById('quiz-ui').style.display = 'none';
-        document.getElementById('result-page').style.display = 'block';
-        
-        let topType = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-        
-        const config = {
-            cold: {
-                name: "虚寒体质", nameEn: "Cold-Deficiency Constitution",
-                desc: "建议温补，避免生冷。您的月度方案侧重于暖胃固本。",
-                descEn: "Warming and nourishing foods are recommended. Avoid cold or raw foods. Your monthly plan focuses on warming the stomach and strengthening your foundation.",
-                meals: [
-                    {name: "红枣杞子鸡汤", nameEn: "Red Date & Wolfberry Chicken Soup", img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
-                    {name: "黑豆炖羊肉", nameEn: "Black Bean Braised Lamb", img: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400"}
-                ]
-            },
-            hot: {
-                name: "燥热体质", nameEn: "Heat-Excess Constitution",
-                desc: "建议清补，多食滋阴降火之物。月度方案侧重于清热排毒。",
-                descEn: "Light and cooling foods are recommended to nourish yin and reduce internal heat. Your monthly plan focuses on clearing heat and detoxifying.",
-                meals: [
-                    {name: "冬瓜排骨汤", nameEn: "Winter Melon & Pork Rib Soup", img: "https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"},
-                    {name: "荷叶蒸鸡", nameEn: "Lotus Leaf Steamed Chicken", img: "https://images.unsplash.com/photo-1512058560366-cd242d4536ee?w=400"}
-                ]
-            },
-            normal: {
-                name: "平和体质", nameEn: "Balanced Constitution",
-                desc: "非常健康的体质！月度方案侧重于四季平衡膳食。",
-                descEn: "You have a very healthy constitution! Your monthly plan focuses on a well-balanced seasonal diet.",
-                meals: [
-                    {name: "五谷杂粮饭套餐", nameEn: "Five-Grain Mixed Rice Set", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"},
-                    {name: "时令蔬菜沙拉", nameEn: "Seasonal Vegetable Salad", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400"}
-                ]
-            },
-            weak: {
-                name: "气虚体质", nameEn: "Qi-Deficiency Constitution",
-                desc: "建议补气养血，避免过劳。月度方案侧重于益气健脾。",
-                descEn: "Foods that replenish qi and nourish blood are recommended. Avoid overexertion. Your monthly plan focuses on boosting energy and supporting the spleen.",
-                meals: [
-                    {name: "五谷杂粮饭套餐", nameEn: "Five-Grain Mixed Rice Set", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"},
-                    {name: "红枣杞子鸡汤", nameEn: "Red Date & Wolfberry Chicken Soup", img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"}
-                ]
-            },
-            damp: {
-                name: "痰湿体质", nameEn: "Damp-Phlegm Constitution",
-                desc: "建议祛湿化痰，饮食宜清淡。月度方案侧重于健脾利湿。",
-                descEn: "Light foods that eliminate dampness and resolve phlegm are recommended. Your monthly plan focuses on strengthening the spleen and draining dampness.",
-                meals: [
-                    {name: "冬瓜排骨汤", nameEn: "Winter Melon & Pork Rib Soup", img: "https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"},
-                    {name: "时令蔬菜沙拉", nameEn: "Seasonal Vegetable Salad", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400"}
-                ]
-            },
-            stagnant: {
-                name: "气郁体质", nameEn: "Qi-Stagnation Constitution",
-                desc: "建议疏肝理气，保持心情舒畅。月度方案侧重于行气活血。",
-                descEn: "Foods that soothe the liver and regulate qi are recommended. Maintaining a positive mood is important. Your monthly plan focuses on promoting qi and blood circulation.",
-                meals: [
-                    {name: "荷叶蒸鸡", nameEn: "Lotus Leaf Steamed Chicken", img: "https://images.unsplash.com/photo-1512058560366-cd242d4536ee?w=400"},
-                    {name: "时令蔬菜沙拉", nameEn: "Seasonal Vegetable Salad", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400"}
-                ]
-            },
-            dry: {
-                name: "阴虚体质", nameEn: "Yin-Deficiency Constitution",
-                desc: "建议滋阴润燥，少食辛辣。月度方案侧重于养阴生津。",
-                descEn: "Moistening and yin-nourishing foods are recommended. Avoid spicy or drying foods. Your monthly plan focuses on nourishing yin and generating fluids.",
-                meals: [
-                    {name: "冬瓜排骨汤", nameEn: "Winter Melon & Pork Rib Soup", img: "https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"},
-                    {name: "五谷杂粮饭套餐", nameEn: "Five-Grain Mixed Rice Set", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"}
-                ]
-            }
-        };
+// ── QUIZ ──
+function initQuiz() {
+  const c = document.getElementById('questions-container');
+  QUESTIONS.forEach((q,i) => {
+    let h = `<div class="q-card ${i===0?'active':''}" id="qc${i}"><h2>${q.q}</h2><div class="q-en">${q.qEn}</div>`;
+    q.opts.forEach(o => { h += `<button class="opt" onclick="selectOpt('${o.v}')"><div class="opt-dot"></div><div class="opt-text"><div class="opt-zh">${o.zh}</div><div class="opt-en">${o.en}</div></div></button>`; });
+    h += `</div>`;
+    c.innerHTML += h;
+  });
+}
 
-        const res = config[topType] || config.normal;
-        document.getElementById('type-tag').innerHTML = `${res.name} <span style="display:block;font-size:13px;color:#aaa;font-weight:400;">${res.nameEn}</span>`;
-        document.getElementById('type-desc').innerHTML = `${res.desc} <span class="en">${res.descEn}</span>`;
+function selectOpt(val) {
+  scores[val] = (scores[val]||0)+1;
+  document.getElementById(`qc${currentQ}`).classList.remove('active');
+  currentQ++;
+  if (currentQ < QUESTIONS.length) {
+    document.getElementById(`qc${currentQ}`).classList.add('active');
+    document.getElementById('p-fill').style.width = Math.round(currentQ/QUESTIONS.length*100)+'%';
+    document.getElementById('p-label').textContent = `Question ${currentQ+1} of ${QUESTIONS.length}`;
+  } else {
+    document.getElementById('p-fill').style.width = '100%';
+    showResults();
+  }
+}
 
-        let mealHtml = "";
-        res.meals.forEach(m => {
-            mealHtml += `<div class="meal-item">
-                <div class="badge">周度优选 · Weekly Pick</div>
-                <img src="${m.img}" alt="${m.name}">
-                <div class="meal-name" style="font-weight:bold; font-size:14px;">${m.name} <span class="en">${m.nameEn}</span></div>
-            </div>`;
-        });
-        document.getElementById('meal-display').innerHTML = mealHtml;
-    }
+// ── RESULTS ──
+function showResults() {
+  topType = Object.keys(scores).reduce((a,b) => scores[a]>scores[b]?a:b);
+  const cfg = CONSTITUTIONS[topType]||CONSTITUTIONS.normal;
+  document.getElementById('cb-name').textContent = cfg.name;
+  document.getElementById('cb-name-en').textContent = cfg.nameEn;
+  document.getElementById('cb-icon').textContent = cfg.icon;
+  document.getElementById('cb-desc').innerHTML = `<span class="zh">${cfg.desc.zh}</span><span class="en">${cfg.desc.en}</span>`;
+  document.getElementById('basket-constitution').innerHTML = `<div class="constitution-pill">${cfg.icon} ${cfg.name} · ${cfg.nameEn}</div>`;
+  buildMenu();
+  document.getElementById('page-quiz').classList.remove('active');
+  document.getElementById('page-results').classList.add('active');
+}
 
-    initQuiz();
+function buildMenu() {
+  const items = MENU[topType]||MENU.normal;
+  const cats = ['All',...new Set(items.map(i=>i.cat))];
+  const tabsEl = document.getElementById('cat-tabs');
+  tabsEl.innerHTML='';
+  cats.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className='tab'+(cat==='All'?' active':'');
+    btn.textContent=cat;
+    btn.onclick=()=>{ activeCat=cat; document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); renderGrid(); };
+    tabsEl.appendChild(btn);
+  });
+  renderGrid();
+}
+
+function renderGrid() {
+  const items = (MENU[topType]||MENU.normal).filter(i => activeCat==='All'||i.cat===activeCat);
+  const BADGE_LABELS = {weekly:'Weekly Pick 周选',monthly:'Monthly Plan 月计',premium:'Premium 精选'};
+  document.getElementById('menu-grid').innerHTML = items.map(item => {
+    const inB = !!basket[item.id];
+    const qty = inB ? basket[item.id].qty : 0;
+    return `<div class="food-card${inB?' in-basket':''}" id="card-${item.id}">
+      <img class="food-img" src="${item.img}" alt="${item.en}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="food-img-ph">🍲</div>
+      <div class="food-body">
+        <div class="food-badges"><span class="food-badge badge-${item.badge}">${BADGE_LABELS[item.badge]}</span></div>
+        <div class="food-name-zh">${item.zh}</div>
+        <div class="food-name-en">${item.en}</div>
+        <div class="food-benefit">${item.bZh}<br><em style="font-size:11px;color:#ccc;">${item.bEn}</em></div>
+        <div class="food-footer">
+          <div class="food-price">HKD ${item.price} <span>/serving</span></div>
+          ${inB
+            ? `<div class="qty-control"><button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button><div class="qty-num">${qty}</div><button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button></div>`
+            : `<button class="add-btn" onclick="addItem('${item.id}')">+</button>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── BASKET ──
+function flatMenu() { return Object.values(MENU).flat(); }
+
+function addItem(id) {
+  const item = flatMenu().find(i=>i.id===id);
+  if (!item) return;
+  basket[id]={item,qty:1};
+  updateBasket(); renderGrid();
+  showToast(`Added · ${item.zh}`);
+}
+
+function changeQty(id,delta) {
+  if (!basket[id]) return;
+  basket[id].qty+=delta;
+  if (basket[id].qty<=0) delete basket[id];
+  updateBasket(); renderGrid();
+}
+
+function updateBasket() {
+  const total = Object.values(basket).reduce((s,b)=>s+b.qty,0);
+  const cost  = Object.values(basket).reduce((s,b)=>s+b.qty*b.item.price,0);
+  document.getElementById('basket-count').textContent=total;
+  document.getElementById('checkout-btn').disabled=total===0;
+
+  const itemsEl = document.getElementById('basket-items');
+  if (!total) {
+    itemsEl.innerHTML='<div class="basket-empty"><div class="icon">🛒</div><div>Your basket is empty<br>添加您喜爱的餐食开始吧</div></div>';
+  } else {
+    itemsEl.innerHTML = Object.values(basket).map(b=>`
+      <div class="basket-item">
+        <div class="basket-item-img"><img src="${b.item.img}" alt="" onerror="this.style.display='none'"></div>
+        <div class="basket-item-info">
+          <div class="basket-item-name">${b.item.zh}</div>
+          <div class="basket-item-sub">${b.item.en}</div>
+          <div class="basket-item-price">HKD ${(b.item.price*b.qty).toFixed(2)}</div>
+        </div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty('${b.item.id}',-1)">−</button>
+          <div class="qty-num">${b.qty}</div>
+          <button class="qty-btn" onclick="changeQty('${b.item.id}',1)">+</button>
+        </div>
+        <button class="basket-item-remove" onclick="changeQty('${b.item.id}',-999)">×</button>
+      </div>`).join('');
+  }
+
+  const del = total>0?5:0;
+  document.getElementById('basket-summary').innerHTML = total ? `
+    <div class="basket-row"><span>Subtotal · 小计</span><span>HKD ${cost.toFixed(2)}</span></div>
+    <div class="basket-row"><span>Delivery · 配送</span><span>HKD ${del.toFixed(2)}</span></div>
+    <div class="basket-row total"><span>Total · 合计</span><span>HKD ${(cost+del).toFixed(2)}</span></div>` : '';
+}
+
+function toggleBasket() {
+  document.getElementById('basket-panel').classList.toggle('open');
+  document.getElementById('basket-overlay').classList.toggle('open');
+}
+
+// ── CHECKOUT ──
+function doCheckout() {
+  const cfg = CONSTITUTIONS[topType]||CONSTITUTIONS.normal;
+  const cost = Object.values(basket).reduce((s,b)=>s+b.qty*b.item.price,0);
+  const del = 5;
+  document.getElementById('order-summary').innerHTML =
+    `<div style="font-family:'Playfair Display',serif;font-size:16px;margin-bottom:16px;color:var(--green);">${cfg.icon} ${cfg.name} Plan<br><span style="font-size:12px;color:var(--muted);font-family:'DM Sans',sans-serif;">${cfg.nameEn}</span></div>` +
+    Object.values(basket).map(b=>`<div class="order-item"><span>${b.item.zh} × ${b.qty}</span><span>HKD ${(b.item.price*b.qty).toFixed(2)}</span></div>`).join('') +
+    `<div class="order-total"><span>Total</span><span>HKD ${(cost+del).toFixed(2)}</span></div>`;
+  document.getElementById('page-results').classList.remove('active');
+  document.getElementById('page-checkout').classList.add('active');
+  document.getElementById('basket-panel').classList.remove('open');
+  document.getElementById('basket-overlay').classList.remove('open');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── HELPERS ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function restartAll() {
+  basket={}; scores={}; currentQ=0; topType=null; activeCat='All';
+  document.getElementById('p-fill').style.width='0%';
+  document.getElementById('p-label').textContent='Question 1 of 7';
+  document.querySelectorAll('.q-card').forEach((c,i)=>c.classList.toggle('active',i===0));
+  document.getElementById('basket-constitution').innerHTML='';
+  updateBasket();
+  document.getElementById('page-checkout').classList.remove('active');
+  document.getElementById('page-results').classList.remove('active');
+  document.getElementById('page-quiz').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+initQuiz();
 </script>
-
 </body>
 </html>

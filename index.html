@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体质自测与订阅推荐</title>
+    <style>
+        :root { --main: #4a7c59; --accent: #f3a683; --bg: #fdfaf6; }
+        body { font-family: 'PingFang SC', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 24px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: var(--main); margin-bottom: 5px; }
+        .progress-bar { height: 8px; background: #eee; border-radius: 4px; margin-bottom: 25px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--main); width: 14%; transition: 0.4s; }
+        .question-card { display: none; }
+        .question-card.active { display: block; animation: slideIn 0.4s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        .option { display: block; width: 100%; padding: 18px; margin: 12px 0; border: 2px solid #f0f0f0; border-radius: 15px; background: white; text-align: left; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .option:hover { border-color: var(--main); background: #f4f9f6; }
+        #result-page { display: none; }
+        .report-card { background: #f4f9f6; padding: 20px; border-radius: 15px; border-left: 6px solid var(--main); margin: 20px 0; }
+        .meal-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .meal-item { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 10px; text-align: center; }
+        .meal-item img { width: 100%; border-radius: 8px; height: 120px; object-fit: cover; margin-bottom: 8px; }
+        .badge { display: inline-block; padding: 4px 12px; background: var(--accent); color: white; border-radius: 20px; font-size: 12px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="quiz-ui">
+        <div class="header">
+            <h1>健康体质自测</h1>
+            <p>完成7道题，获取你的专属月度餐单</p>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="p-fill"></div></div>
+        
+        <div id="questions-container">
+            <!-- 问题将由JS动态生成 -->
+        </div>
+    </div>
+
+    <div id="result-page">
+        <div class="header">
+            <h1>测评报告</h1>
+        </div>
+        <div class="report-card">
+            <h3>您的体质倾向：<span id="type-tag" style="color:var(--main)">计算中...</span></h3>
+            <p id="type-desc"></p>
+        </div>
+
+        <h3>📅 订阅推荐 (月度计划)</h3>
+        <p style="font-size: 14px; color: #666;">根据您的体质，我们为您锁定了以下周/月度餐食：</p>
+        <div class="meal-section" id="meal-display">
+            <!-- 餐食展示 -->
+        </div>
+        
+        <button class="option" style="text-align:center; background:var(--main); color:white; border:none; margin-top:20px;" onclick="location.reload()">重新测评</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "1. 您的精神状态经常是？", options: [{t:"精力充沛", v:"normal"}, {t:"容易疲劳、气短", v:"weak"}, {t:"心情抑郁、易怒", v:"stagnant"}] },
+        { q: "2. 您的抗寒能力如何？", options: [{t:"非常怕冷，夏天也喝热水", v:"cold"}, {t:"非常怕热，容易出汗", v:"hot"}, {t:"适中", v:"normal"}] },
+        { q: "3. 观察皮肤和面色？", options: [{t:"面色晦暗，容易有斑", v:"stagnant"}, {t:"皮肤油腻，容易长痘", v:"damp"}, {t:"皮肤干燥，容易脱屑", v:"dry"}] },
+        { q: "4. 您的消化情况如何？", options: [{t:"胃口好，容易饿", v:"hot"}, {t:"饭后容易腹胀", v:"weak"}, {t:"吃凉的容易拉肚子", v:"cold"}] },
+        { q: "5. 您的睡眠质量？", options: [{t:"入睡快，质量高", v:"normal"}, {t:"多梦易醒", v:"weak"}, {t:"失眠，心情烦躁", v:"hot"}] },
+        { q: "6. 身体是否有沉重感？", options: [{t:"感觉身体很重，不想动", v:"damp"}, {t:"轻松有力", v:"normal"}, {t:"四肢无力，但体重不重", v:"weak"}] },
+        { q: "7. 您的饮水习惯？", options: [{t:"很少口渴", v:"cold"}, {t:"一直想喝水，口干", v:"hot"}, {t:"口粘，不想喝水", v:"damp"}] }
+    ];
+
+    let currentQ = 0;
+    let scores = {};
+
+    function initQuiz() {
+        const container = document.getElementById('questions-container');
+        questions.forEach((item, index) => {
+            let html = `<div class="question-card ${index===0?'active':''}" id="qc${index}"><h3>${item.q}</h3>`;
+            item.options.forEach(opt => {
+                html += `<button class="option" onclick="handleSelect('${opt.v}')">${opt.t}</button>`;
+            });
+            html += `</div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function handleSelect(val) {
+        scores[val] = (scores[val] || 0) + 1;
+        document.getElementById(`qc${currentQ}`).classList.remove('active');
+        currentQ++;
+        if(currentQ < questions.length) {
+            document.getElementById(`qc${currentQ}`).classList.add('active');
+            document.getElementById('p-fill').style.width = ((currentQ+1)/7 * 100) + '%';
+        } else {
+            showReport();
+        }
+    }
+
+    function showReport() {
+        document.getElementById('quiz-ui').style.display = 'none';
+        document.getElementById('result-page').style.display = 'block';
+        
+        // 简单逻辑找最高分
+        let topType = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+        
+        const config = {
+            cold: { name: "虚寒体质", desc: "建议温补，避免生冷。您的月度方案侧重于暖胃固本。", meals: [
+                {name: "红枣杞子鸡汤", img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+                {name: "黑豆炖羊肉", img: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400"}
+            ]},
+            hot: { name: "燥热体质", desc: "建议清补，多食滋阴降火之物。月度方案侧重于清热排毒。", meals: [
+                {name: "冬瓜排骨汤", img: "https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"},
+                {name: "荷叶蒸鸡", img: "https://images.unsplash.com/photo-1512058560366-cd242d4536ee?w=400"}
+            ]},
+            normal: { name: "平和体质", desc: "非常健康的体质！月度方案侧重于四季平衡膳食。", meals: [
+                {name: "五谷杂粮饭套餐", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"},
+                {name: "时令蔬菜沙拉", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400"}
+            ]}
+        };
+
+        const res = config[topType] || config.normal;
+        document.getElementById('type-tag').innerText = res.name;
+        document.getElementById('type-desc').innerText = res.desc;
+
+        let mealHtml = "";
+        res.meals.forEach(m => {
+            mealHtml += `<div class="meal-item">
+                <div class="badge">周度优选</div>
+                <img src="${m.img}" alt="${m.name}">
+                <div style="font-weight:bold; font-size:14px;">${m.name}</div>
+            </div>`;
+        });
+        document.getElementById('meal-display').innerHTML = mealHtml;
+    }
+
+    initQuiz();
+</script>
+
+</body>
+</html>

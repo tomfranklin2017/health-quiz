@@ -3,26 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>体质自测与订阅推荐</title>
+    <title>体质自测与订阅推荐 | Body Constitution Quiz</title>
     <style>
         :root { --main: #4a7c59; --accent: #f3a683; --bg: #fdfaf6; }
         body { font-family: 'PingFang SC', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 24px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
         .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: var(--main); margin-bottom: 5px; }
+        .header h1 { color: var(--main); margin-bottom: 2px; }
+        .header h1 .en { display: block; font-size: 14px; color: #999; font-weight: 400; margin-top: 2px; }
+        .header p .en { display: block; font-size: 12px; color: #bbb; margin-top: 2px; }
         .progress-bar { height: 8px; background: #eee; border-radius: 4px; margin-bottom: 25px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--main); width: 14%; transition: 0.4s; }
         .question-card { display: none; }
         .question-card.active { display: block; animation: slideIn 0.4s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        .option { display: block; width: 100%; padding: 18px; margin: 12px 0; border: 2px solid #f0f0f0; border-radius: 15px; background: white; text-align: left; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .question-card h3 .en { display: block; font-size: 13px; color: #999; font-weight: 400; margin-top: 3px; }
+        .option { display: block; width: 100%; padding: 18px; margin: 12px 0; border: 2px solid #f0f0f0; border-radius: 15px; background: white; text-align: left; cursor: pointer; font-size: 16px; transition: 0.3s; box-sizing: border-box; }
         .option:hover { border-color: var(--main); background: #f4f9f6; }
+        .option .en { display: block; font-size: 12px; color: #aaa; margin-top: 3px; }
         #result-page { display: none; }
         .report-card { background: #f4f9f6; padding: 20px; border-radius: 15px; border-left: 6px solid var(--main); margin: 20px 0; }
+        .report-card h3 .en { display: block; font-size: 13px; color: #888; font-weight: 400; margin-top: 4px; }
+        .report-card p .en { display: block; font-size: 13px; color: #aaa; margin-top: 6px; font-style: italic; }
+        .section-title .en { display: block; font-size: 12px; color: #aaa; font-weight: 400; margin-top: 2px; }
+        .sub-label { font-size: 14px; color: #666; }
+        .sub-label .en { display: block; font-size: 12px; color: #bbb; margin-top: 2px; }
         .meal-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .meal-item { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 10px; text-align: center; }
         .meal-item img { width: 100%; border-radius: 8px; height: 120px; object-fit: cover; margin-bottom: 8px; }
         .badge { display: inline-block; padding: 4px 12px; background: var(--accent); color: white; border-radius: 20px; font-size: 12px; margin-bottom: 10px; }
+        .meal-name .en { display: block; font-size: 11px; color: #bbb; margin-top: 2px; }
+        .restart-btn { display: block; width: 100%; padding: 18px; text-align: center; background: var(--main); color: white; border: none; border-radius: 15px; margin-top: 20px; font-size: 16px; cursor: pointer; box-sizing: border-box; }
+        .restart-btn .en { display: block; font-size: 12px; opacity: 0.8; margin-top: 3px; }
     </style>
 </head>
 <body>
@@ -30,44 +42,100 @@
 <div class="container">
     <div id="quiz-ui">
         <div class="header">
-            <h1>健康体质自测</h1>
-            <p>完成7道题，获取你的专属月度餐单</p>
+            <h1>健康体质自测 <span class="en">Health Body Constitution Quiz</span></h1>
+            <p>完成7道题，获取你的专属月度餐单 <span class="en">Answer 7 questions to get your personalised monthly meal plan</span></p>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="p-fill"></div></div>
         
-        <div id="questions-container">
-            <!-- 问题将由JS动态生成 -->
-        </div>
+        <div id="questions-container"></div>
     </div>
 
     <div id="result-page">
         <div class="header">
-            <h1>测评报告</h1>
+            <h1>测评报告 <span class="en">Assessment Report</span></h1>
         </div>
         <div class="report-card">
-            <h3>您的体质倾向：<span id="type-tag" style="color:var(--main)">计算中...</span></h3>
+            <h3>您的体质倾向：<span id="type-tag" style="color:var(--main)">计算中... <span class="en" style="font-size:12px;">Calculating...</span></span>
+                <span class="en">Your constitution type:</span>
+            </h3>
             <p id="type-desc"></p>
         </div>
 
-        <h3>📅 订阅推荐 (月度计划)</h3>
-        <p style="font-size: 14px; color: #666;">根据您的体质，我们为您锁定了以下周/月度餐食：</p>
-        <div class="meal-section" id="meal-display">
-            <!-- 餐食展示 -->
-        </div>
+        <h3 class="section-title">📅 订阅推荐 (月度计划) <span class="en">Subscription Recommendations (Monthly Plan)</span></h3>
+        <p class="sub-label">根据您的体质，我们为您锁定了以下周/月度餐食：
+            <span class="en">Based on your constitution, we have selected the following weekly/monthly meals for you:</span>
+        </p>
+        <div class="meal-section" id="meal-display"></div>
         
-        <button class="option" style="text-align:center; background:var(--main); color:white; border:none; margin-top:20px;" onclick="location.reload()">重新测评</button>
+        <button class="restart-btn" onclick="location.reload()">重新测评 <span class="en">Retake the Quiz</span></button>
     </div>
 </div>
 
 <script>
     const questions = [
-        { q: "1. 您的精神状态经常是？", options: [{t:"精力充沛", v:"normal"}, {t:"容易疲劳、气短", v:"weak"}, {t:"心情抑郁、易怒", v:"stagnant"}] },
-        { q: "2. 您的抗寒能力如何？", options: [{t:"非常怕冷，夏天也喝热水", v:"cold"}, {t:"非常怕热，容易出汗", v:"hot"}, {t:"适中", v:"normal"}] },
-        { q: "3. 观察皮肤和面色？", options: [{t:"面色晦暗，容易有斑", v:"stagnant"}, {t:"皮肤油腻，容易长痘", v:"damp"}, {t:"皮肤干燥，容易脱屑", v:"dry"}] },
-        { q: "4. 您的消化情况如何？", options: [{t:"胃口好，容易饿", v:"hot"}, {t:"饭后容易腹胀", v:"weak"}, {t:"吃凉的容易拉肚子", v:"cold"}] },
-        { q: "5. 您的睡眠质量？", options: [{t:"入睡快，质量高", v:"normal"}, {t:"多梦易醒", v:"weak"}, {t:"失眠，心情烦躁", v:"hot"}] },
-        { q: "6. 身体是否有沉重感？", options: [{t:"感觉身体很重，不想动", v:"damp"}, {t:"轻松有力", v:"normal"}, {t:"四肢无力，但体重不重", v:"weak"}] },
-        { q: "7. 您的饮水习惯？", options: [{t:"很少口渴", v:"cold"}, {t:"一直想喝水，口干", v:"hot"}, {t:"口粘，不想喝水", v:"damp"}] }
+        {
+            q: "1. 您的精神状态经常是？",
+            qEn: "1. How would you describe your usual energy levels?",
+            options: [
+                {t:"精力充沛", tEn:"Energetic and full of vitality", v:"normal"},
+                {t:"容易疲劳、气短", tEn:"Easily fatigued or short of breath", v:"weak"},
+                {t:"心情抑郁、易怒", tEn:"Moody, depressed or easily irritated", v:"stagnant"}
+            ]
+        },
+        {
+            q: "2. 您的抗寒能力如何？",
+            qEn: "2. How sensitive are you to cold temperatures?",
+            options: [
+                {t:"非常怕冷，夏天也喝热水", tEn:"Very sensitive to cold — drink hot water even in summer", v:"cold"},
+                {t:"非常怕热，容易出汗", tEn:"Very sensitive to heat and sweat easily", v:"hot"},
+                {t:"适中", tEn:"Neither — comfortable in most temperatures", v:"normal"}
+            ]
+        },
+        {
+            q: "3. 观察皮肤和面色？",
+            qEn: "3. How would you describe your skin and complexion?",
+            options: [
+                {t:"面色晦暗，容易有斑", tEn:"Dull complexion, prone to dark spots or patches", v:"stagnant"},
+                {t:"皮肤油腻，容易长痘", tEn:"Oily skin, prone to acne or breakouts", v:"damp"},
+                {t:"皮肤干燥，容易脱屑", tEn:"Dry skin, prone to flaking or peeling", v:"dry"}
+            ]
+        },
+        {
+            q: "4. 您的消化情况如何？",
+            qEn: "4. How is your digestion?",
+            options: [
+                {t:"胃口好，容易饿", tEn:"Good appetite, get hungry easily", v:"hot"},
+                {t:"饭后容易腹胀", tEn:"Bloating or discomfort after meals", v:"weak"},
+                {t:"吃凉的容易拉肚子", tEn:"Cold food often causes loose stools or diarrhoea", v:"cold"}
+            ]
+        },
+        {
+            q: "5. 您的睡眠质量？",
+            qEn: "5. How is your sleep quality?",
+            options: [
+                {t:"入睡快，质量高", tEn:"Fall asleep quickly and sleep well", v:"normal"},
+                {t:"多梦易醒", tEn:"Vivid dreams or wake up frequently during the night", v:"weak"},
+                {t:"失眠，心情烦躁", tEn:"Insomnia or restlessness at night", v:"hot"}
+            ]
+        },
+        {
+            q: "6. 身体是否有沉重感？",
+            qEn: "6. Do you feel a sense of heaviness in your body?",
+            options: [
+                {t:"感觉身体很重，不想动", tEn:"Body feels heavy and sluggish, reluctant to move", v:"damp"},
+                {t:"轻松有力", tEn:"Feel light and strong", v:"normal"},
+                {t:"四肢无力，但体重不重", tEn:"Limbs feel weak, but body is not heavy", v:"weak"}
+            ]
+        },
+        {
+            q: "7. 您的饮水习惯？",
+            qEn: "7. What are your thirst and drinking habits like?",
+            options: [
+                {t:"很少口渴", tEn:"Rarely feel thirsty", v:"cold"},
+                {t:"一直想喝水，口干", tEn:"Constantly thirsty with a dry mouth", v:"hot"},
+                {t:"口粘，不想喝水", tEn:"Mouth feels sticky or coated, no desire to drink", v:"damp"}
+            ]
+        }
     ];
 
     let currentQ = 0;
@@ -76,9 +144,13 @@
     function initQuiz() {
         const container = document.getElementById('questions-container');
         questions.forEach((item, index) => {
-            let html = `<div class="question-card ${index===0?'active':''}" id="qc${index}"><h3>${item.q}</h3>`;
+            let html = `<div class="question-card ${index===0?'active':''}" id="qc${index}">
+                <h3>${item.q} <span class="en">${item.qEn}</span></h3>`;
             item.options.forEach(opt => {
-                html += `<button class="option" onclick="handleSelect('${opt.v}')">${opt.t}</button>`;
+                html += `<button class="option" onclick="handleSelect('${opt.v}')">
+                    ${opt.t}
+                    <span class="en">${opt.tEn}</span>
+                </button>`;
             });
             html += `</div>`;
             container.innerHTML += html;
@@ -101,34 +173,84 @@
         document.getElementById('quiz-ui').style.display = 'none';
         document.getElementById('result-page').style.display = 'block';
         
-        // 简单逻辑找最高分
         let topType = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
         
         const config = {
-            cold: { name: "虚寒体质", desc: "建议温补，避免生冷。您的月度方案侧重于暖胃固本。", meals: [
-                {name: "红枣杞子鸡汤", img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
-                {name: "黑豆炖羊肉", img: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400"}
-            ]},
-            hot: { name: "燥热体质", desc: "建议清补，多食滋阴降火之物。月度方案侧重于清热排毒。", meals: [
-                {name: "冬瓜排骨汤", img: "https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"},
-                {name: "荷叶蒸鸡", img: "https://images.unsplash.com/photo-1512058560366-cd242d4536ee?w=400"}
-            ]},
-            normal: { name: "平和体质", desc: "非常健康的体质！月度方案侧重于四季平衡膳食。", meals: [
-                {name: "五谷杂粮饭套餐", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"},
-                {name: "时令蔬菜沙拉", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400"}
-            ]}
+            cold: {
+                name: "虚寒体质", nameEn: "Cold-Deficiency Constitution",
+                desc: "建议温补，避免生冷。您的月度方案侧重于暖胃固本。",
+                descEn: "Warming and nourishing foods are recommended. Avoid cold or raw foods. Your monthly plan focuses on warming the stomach and strengthening your foundation.",
+                meals: [
+                    {name: "红枣杞子鸡汤", nameEn: "Red Date & Wolfberry Chicken Soup", img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+                    {name: "黑豆炖羊肉", nameEn: "Black Bean Braised Lamb", img: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400"}
+                ]
+            },
+            hot: {
+                name: "燥热体质", nameEn: "Heat-Excess Constitution",
+                desc: "建议清补，多食滋阴降火之物。月度方案侧重于清热排毒。",
+                descEn: "Light and cooling foods are recommended to nourish yin and reduce internal heat. Your monthly plan focuses on clearing heat and detoxifying.",
+                meals: [
+                    {name: "冬瓜排骨汤", nameEn: "Winter Melon & Pork Rib Soup", img: "https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"},
+                    {name: "荷叶蒸鸡", nameEn: "Lotus Leaf Steamed Chicken", img: "https://images.unsplash.com/photo-1512058560366-cd242d4536ee?w=400"}
+                ]
+            },
+            normal: {
+                name: "平和体质", nameEn: "Balanced Constitution",
+                desc: "非常健康的体质！月度方案侧重于四季平衡膳食。",
+                descEn: "You have a very healthy constitution! Your monthly plan focuses on a well-balanced seasonal diet.",
+                meals: [
+                    {name: "五谷杂粮饭套餐", nameEn: "Five-Grain Mixed Rice Set", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"},
+                    {name: "时令蔬菜沙拉", nameEn: "Seasonal Vegetable Salad", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400"}
+                ]
+            },
+            weak: {
+                name: "气虚体质", nameEn: "Qi-Deficiency Constitution",
+                desc: "建议补气养血，避免过劳。月度方案侧重于益气健脾。",
+                descEn: "Foods that replenish qi and nourish blood are recommended. Avoid overexertion. Your monthly plan focuses on boosting energy and supporting the spleen.",
+                meals: [
+                    {name: "五谷杂粮饭套餐", nameEn: "Five-Grain Mixed Rice Set", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"},
+                    {name: "红枣杞子鸡汤", nameEn: "Red Date & Wolfberry Chicken Soup", img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"}
+                ]
+            },
+            damp: {
+                name: "痰湿体质", nameEn: "Damp-Phlegm Constitution",
+                desc: "建议祛湿化痰，饮食宜清淡。月度方案侧重于健脾利湿。",
+                descEn: "Light foods that eliminate dampness and resolve phlegm are recommended. Your monthly plan focuses on strengthening the spleen and draining dampness.",
+                meals: [
+                    {name: "冬瓜排骨汤", nameEn: "Winter Melon & Pork Rib Soup", img: "https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"},
+                    {name: "时令蔬菜沙拉", nameEn: "Seasonal Vegetable Salad", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400"}
+                ]
+            },
+            stagnant: {
+                name: "气郁体质", nameEn: "Qi-Stagnation Constitution",
+                desc: "建议疏肝理气，保持心情舒畅。月度方案侧重于行气活血。",
+                descEn: "Foods that soothe the liver and regulate qi are recommended. Maintaining a positive mood is important. Your monthly plan focuses on promoting qi and blood circulation.",
+                meals: [
+                    {name: "荷叶蒸鸡", nameEn: "Lotus Leaf Steamed Chicken", img: "https://images.unsplash.com/photo-1512058560366-cd242d4536ee?w=400"},
+                    {name: "时令蔬菜沙拉", nameEn: "Seasonal Vegetable Salad", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400"}
+                ]
+            },
+            dry: {
+                name: "阴虚体质", nameEn: "Yin-Deficiency Constitution",
+                desc: "建议滋阴润燥，少食辛辣。月度方案侧重于养阴生津。",
+                descEn: "Moistening and yin-nourishing foods are recommended. Avoid spicy or drying foods. Your monthly plan focuses on nourishing yin and generating fluids.",
+                meals: [
+                    {name: "冬瓜排骨汤", nameEn: "Winter Melon & Pork Rib Soup", img: "https://images.unsplash.com/photo-1594759070439-77134a41744b?w=400"},
+                    {name: "五谷杂粮饭套餐", nameEn: "Five-Grain Mixed Rice Set", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"}
+                ]
+            }
         };
 
         const res = config[topType] || config.normal;
-        document.getElementById('type-tag').innerText = res.name;
-        document.getElementById('type-desc').innerText = res.desc;
+        document.getElementById('type-tag').innerHTML = `${res.name} <span style="display:block;font-size:13px;color:#aaa;font-weight:400;">${res.nameEn}</span>`;
+        document.getElementById('type-desc').innerHTML = `${res.desc} <span class="en">${res.descEn}</span>`;
 
         let mealHtml = "";
         res.meals.forEach(m => {
             mealHtml += `<div class="meal-item">
-                <div class="badge">周度优选</div>
+                <div class="badge">周度优选 · Weekly Pick</div>
                 <img src="${m.img}" alt="${m.name}">
-                <div style="font-weight:bold; font-size:14px;">${m.name}</div>
+                <div class="meal-name" style="font-weight:bold; font-size:14px;">${m.name} <span class="en">${m.nameEn}</span></div>
             </div>`;
         });
         document.getElementById('meal-display').innerHTML = mealHtml;
